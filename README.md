@@ -1,0 +1,1 @@
+# daiamond-counter.ver2
