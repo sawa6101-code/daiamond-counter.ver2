@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0099ff">
+
+    <title>ダイヤ倍率計算機</title>
+
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="style.css">
+
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+</head>
+
+<body>
+
+<header>
+    <h1>💎 ダイヤ倍率計算機</h1>
+    <p>各投資ごとの倍率を自動計算</p>
+</header>
+
+<main id="container">
+
+    <!-- 30 -->
+    <section class="card">
+        <h2>① 30投資</h2>
+
+        <label>元のダイヤ数</label>
+        <input id="base30" type="number" inputmode="numeric">
+
+        <label>獲得後ダイヤ数</label>
+        <input id="after30" type="number" inputmode="numeric">
+
+        <div class="result">
+            <div>増加ダイヤ数</div>
+            <span id="diff30">-</span>
+        </div>
+
+        <div class="rate">
+            <div>倍率</div>
+            <span id="rate30">-</span>
+        </div>
+    </section>
+
+    <!-- 300 -->
+    <section class="card">
+        <h2>② 300投資</h2>
+
+        <label>元のダイヤ数</label>
+        <input id="base300" type="number" inputmode="numeric">
+
+        <label>獲得後ダイヤ数</label>
+        <input id="after300" type="number" inputmode="numeric">
+
+        <div class="result">
+            <div>増加ダイヤ数</div>
+            <span id="diff300">-</span>
+        </div>
+
+        <div class="rate">
+            <div>倍率</div>
+            <span id="rate300">-</span>
+        </div>
+    </section>
+
+    <!-- 3000 -->
+    <section class="card">
+        <h2>③ 3000投資</h2>
+
+        <label>元のダイヤ数</label>
+        <input id="base3000" type="number" inputmode="numeric">
+
+        <label>獲得後ダイヤ数</label>
+        <input id="after3000" type="number" inputmode="numeric">
+
+        <div class="result">
+            <div>増加ダイヤ数</div>
+            <span id="diff3000">-</span>
+        </div>
+
+        <div class="rate">
+            <div>倍率</div>
+            <span id="rate3000">-</span>
+        </div>
+    </section>
+
+    <!-- 30000 -->
+    <section class="card">
+        <h2>④ 30000投資</h2>
+
+        <label>元のダイヤ数</label>
+        <input id="base30000" type="number" inputmode="numeric">
+
+        <label>獲得後ダイヤ数</label>
+        <input id="after30000" type="number" inputmode="numeric">
+
+        <div class="result">
+            <div>増加ダイヤ数</div>
+            <span id="diff30000">-</span>
+        </div>
+
+        <div class="rate">
+            <div>倍率</div>
+            <span id="rate30000">-</span>
+        </div>
+    </section>
+
+    <section class="summary">
+
+        <h2>総合倍率</h2>
+
+        <div class="summaryRate" id="totalRate">
+            -
+        </div>
+
+        <small>
+            （④獲得後 − ①元）÷33330
+        </small>
+
+    </section>
+
+</main>
+
+<footer>
+
+<button id="resetButton">
+リセット
+</button>
+
+</footer>
+
+<script src="app.js"></script>
+
+</body>
+</html>
