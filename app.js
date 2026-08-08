@@ -389,4 +389,3 @@ if ("serviceWorker" in navigator) {
                 });
         }
     );
-}
