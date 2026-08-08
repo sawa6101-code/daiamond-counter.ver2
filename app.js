@@ -1,285 +1,143 @@
 "use strict";
-/* ========================================
-   ダイヤ倍率計算機
-   ======================================== */
-const INVESTMENTS = {
-    30: 30,
-    300: 300,
-    3000: 3000,
-    30000: 30000
-};
+
+const INVESTMENTS = { 30: 30, 300: 300, 3000: 3000, 30000: 30000 };
 const TOTAL_INVESTMENT = 33330;
 const MAX_RATE = 2;
-const STORAGE_KEY = "diamondCounterData_v2";
-/* ----------------------------------------
-   DOM
----------------------------------------- */
-const fields = [
-    {
-        key: "30",
-        base: document.getElementById("base30"),
-        after: document.getElementById("after30"),
-        diff: document.getElementById("diff30"),
-        rate: document.getElementById("rate30")
-    },
-    {
-        key: "300",
-        base: document.getElementById("base300"),
-        after: document.getElementById("after300"),
-        diff: document.getElementById("diff300"),
-        rate: document.getElementById("rate300")
-    },
-    {
-        key: "3000",
-        base: document.getElementById("base3000"),
-        after: document.getElementById("after3000"),
-        diff: document.getElementById("diff3000"),
-        rate: document.getElementById("rate3000")
-    },
-    {
-        key: "30000",
-        base: document.getElementById("base30000"),
-        after: document.getElementById("after30000"),
-        diff: document.getElementById("diff30000"),
-        rate: document.getElementById("rate30000")
-    }
-];
-const totalRateElement =
-    document.getElementById("totalRate");
-const resetButton =
-    document.getElementById("resetButton");
-/* ----------------------------------------
-   入力値
----------------------------------------- */
-function getValue(input) {
-    if (!input || input.value.trim() === "") {
-        return null;
-    }
-    const value = Number(input.value);
-    return Number.isFinite(value) ? value : null;
-}
-/* ----------------------------------------
-   倍率
----------------------------------------- */
-function calculateRate(difference, investment) {
-    const rate = difference / investment;
-    return Math.min(rate, MAX_RATE);
-}
-/* ----------------------------------------
-   表示
----------------------------------------- */
-function displayRate(element, rate) {
-    element.classList.remove(
-        "good",
-        "warning",
-        "bad",
-        "max"
-    );
-    if (rate === null || !Number.isFinite(rate)) {
-        element.textContent = "-";
+const STORAGE_KEY = "diamondCounterData_v3";
+
+function init() {
+    const fields = [
+        { key: "30", base: "base30", after: "after30", diff: "diff30", rate: "rate30" },
+        { key: "300", base: "base300", after: "after300", diff: "diff300", rate: "rate300" },
+        { key: "3000", base: "base3000", after: "after3000", diff: "diff3000", rate: "rate3000" },
+        { key: "30000", base: "base30000", after: "after30000", diff: "diff30000", rate: "rate30000" }
+    ].map(f => ({
+        key: f.key,
+        base: document.getElementById(f.base),
+        after: document.getElementById(f.after),
+        diff: document.getElementById(f.diff),
+        rate: document.getElementById(f.rate)
+    }));
+
+    const totalRate = document.getElementById("totalRate");
+    const resetButton = document.getElementById("resetButton");
+
+    if (!fields.every(f => f.base && f.after && f.diff && f.rate) || !totalRate || !resetButton) {
+        console.error("必要なHTML要素が見つかりません。");
         return;
     }
-    element.textContent =
-        rate.toFixed(3) + "倍";
-    if (rate >= MAX_RATE) {
-        element.classList.add("max");
-    } else if (rate >= 1.5) {
-        element.classList.add("good");
-    } else if (rate >= 1.0) {
-        element.classList.add("warning");
-    } else {
-        element.classList.add("bad");
+
+    function value(input) {
+        if (input.value.trim() === "") return null;
+        const n = Number(input.value);
+        return Number.isFinite(n) ? n : null;
     }
-}
-/* ----------------------------------------
-   各投資の計算
----------------------------------------- */
-function calculate() {
-    fields.forEach(field => {
-        const base = getValue(field.base);
-        const after = getValue(field.after);
-        if (base === null || after === null) {
-            field.diff.textContent = "-";
-            displayRate(field.rate, null);
+
+    function cappedRate(difference, investment) {
+        return Math.min(difference / investment, MAX_RATE);
+    }
+
+    function renderRate(element, rate) {
+        element.classList.remove("good", "warning", "bad", "max");
+        if (rate === null || !Number.isFinite(rate)) {
+            element.textContent = "-";
             return;
         }
-        // 獲得後 - 元
-        const difference = after - base;
-        // 増加ダイヤ数
-        field.diff.textContent =
-            difference.toLocaleString("ja-JP");
-        // 増加ダイヤ数 ÷ 投資額
-        const rate = calculateRate(
-            difference,
-            INVESTMENTS[field.key]
-        );
-        displayRate(field.rate, rate);
-    });
-    calculateTotal();
-    saveData();
-}
-/* ----------------------------------------
-   総合倍率
----------------------------------------- */
-function calculateTotal() {
-    const firstBase =
-        getValue(fields[0].base);
-    const fourthAfter =
-        getValue(fields[3].after);
-    if (
-        firstBase === null ||
-        fourthAfter === null
-    ) {
-        displayRate(
-            totalRateElement,
-            null
-        );
-        return;
+        element.textContent = `${rate.toFixed(3)}倍`;
+        if (rate >= MAX_RATE) element.classList.add("max");
+        else if (rate >= 1.5) element.classList.add("good");
+        else if (rate >= 1) element.classList.add("warning");
+        else element.classList.add("bad");
     }
-    // ④獲得後 - ①元
-    const totalDifference =
-        fourthAfter - firstBase;
-    // 総投資額33330で割る
-    const totalRate =
-        calculateRate(
-            totalDifference,
-            TOTAL_INVESTMENT
-        );
-    displayRate(
-        totalRateElement,
-        totalRate
-    );
-}
-/* ----------------------------------------
-   保存
----------------------------------------- */
-function saveData() {
-    const data = {};
-    fields.forEach(field => {
-        data[field.key] = {
-            base: field.base.value,
-            after: field.after.value
-        };
-    });
-    try {
-        localStorage.setItem(
-            STORAGE_KEY,
-            JSON.stringify(data)
-        );
-    } catch (error) {
-        console.error(
-            "保存エラー:",
-            error
-        );
-    }
-}
-/* ----------------------------------------
-   復元
----------------------------------------- */
-function loadData() {
-    try {
-        const saved =
-            localStorage.getItem(STORAGE_KEY);
-        if (!saved) {
-            return;
-        }
-        const data =
-            JSON.parse(saved);
-        fields.forEach(field => {
-            if (!data[field.key]) {
-                return;
+
+    function calculate() {
+        for (const field of fields) {
+            const base = value(field.base);
+            const after = value(field.after);
+            if (base === null || after === null) {
+                field.diff.textContent = "-";
+                renderRate(field.rate, null);
+                continue;
             }
-            field.base.value =
-                data[field.key].base || "";
-            field.after.value =
-                data[field.key].after || "";
+            const difference = after - base;
+            field.diff.textContent = difference.toLocaleString("ja-JP");
+            renderRate(field.rate, cappedRate(difference, INVESTMENTS[field.key]));
+        }
+
+        const firstBase = value(fields[0].base);
+        const fourthAfter = value(fields[3].after);
+        if (firstBase === null || fourthAfter === null) {
+            renderRate(totalRate, null);
+        } else {
+            renderRate(totalRate, cappedRate(fourthAfter - firstBase, TOTAL_INVESTMENT));
+        }
+        save();
+    }
+
+    function save() {
+        try {
+            const data = {};
+            fields.forEach(f => {
+                data[f.key] = { base: f.base.value, after: f.after.value };
+            });
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        } catch (e) {
+            console.warn("保存できませんでした", e);
+        }
+    }
+
+    function load() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) return;
+            const data = JSON.parse(raw);
+            fields.forEach(f => {
+                if (!data[f.key]) return;
+                f.base.value = data[f.key].base ?? "";
+                f.after.value = data[f.key].after ?? "";
+            });
+        } catch (e) {
+            console.warn("保存データを読み込めませんでした", e);
+        }
+    }
+
+    function reset() {
+        if (!window.confirm("入力内容をすべてリセットしますか？")) return;
+        fields.forEach(f => {
+            f.base.value = "";
+            f.after.value = "";
+            f.diff.textContent = "-";
+            renderRate(f.rate, null);
         });
-    } catch (error) {
-        console.error(
-            "復元エラー:",
-            error
-        );
-    }
-}
-/* ----------------------------------------
-   リセット
----------------------------------------- */
-function resetData() {
-    if (
-        !window.confirm(
-            "入力内容をすべてリセットしますか？"
-        )
-    ) {
-        return;
-    }
-    fields.forEach(field => {
-        field.base.value = "";
-        field.after.value = "";
-        field.diff.textContent = "-";
-        displayRate(
-            field.rate,
-            null
-        );
-    });
-    displayRate(
-        totalRateElement,
-        null
-    );
-    try {
-        localStorage.removeItem(
-            STORAGE_KEY
-        );
-    } catch (error) {
-        console.error(
-            "削除エラー:",
-            error
-        );
-    }
-}
-/* ----------------------------------------
-   イベント登録
----------------------------------------- */
-fields.forEach(field => {
-    field.base.addEventListener(
-        "input",
-        calculate
-    );
-    field.after.addEventListener(
-        "input",
-        calculate
-    );
-});
-resetButton.addEventListener(
-    "click",
-    resetData
-);
-/* ----------------------------------------
-   起動
----------------------------------------- */
-loadData();
-calculate();
-/* ----------------------------------------
-   Service Worker
----------------------------------------- */
-if ("serviceWorker" in navigator) {
-    window.addEventListener(
-        "load",
-        async () => {
-            try {
-                const registration =
-                    await navigator.serviceWorker.register(
-                        "./service-worker.js"
-                    );
-                console.log(
-                    "PWA Service Worker:",
-                    registration.scope
-                );
-            } catch (error) {
-                console.error(
-                    "Service Worker登録エラー:",
-                    error
-                );
-            }
+        renderRate(totalRate, null);
+        try {
+            localStorage.removeItem(STORAGE_KEY);
+        } catch (e) {
+            console.warn("保存データを削除できませんでした", e);
         }
-    );
+    }
+
+    fields.forEach(f => {
+        f.base.addEventListener("input", calculate);
+        f.after.addEventListener("input", calculate);
+        f.base.addEventListener("change", calculate);
+        f.after.addEventListener("change", calculate);
+    });
+
+    resetButton.addEventListener("click", reset);
+
+    load();
+    calculate();
+
+    if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("./service-worker.js", { updateViaCache: "none" })
+            .then(reg => reg.update())
+            .catch(err => console.warn("Service Worker登録失敗:", err));
+    }
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init, { once: true });
+} else {
+    init();
 }
