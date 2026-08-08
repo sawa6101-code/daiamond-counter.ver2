@@ -3,7 +3,7 @@
 const INVESTMENTS = { 30: 30, 300: 300, 3000: 3000, 30000: 30000 };
 const TOTAL_INVESTMENT = 33330;
 const MAX_RATE = 2;
-const STORAGE_KEY = "diamondCounterData_v3";
+const STORAGE_KEY = "diamondCounterData_v4";
 
 function init() {
     const fields = [
@@ -27,14 +27,23 @@ function init() {
         return;
     }
 
+    // ②以降の「元のダイヤ数」は前段の「獲得後ダイヤ数」を自動参照
+    for (let i = 1; i < fields.length; i++) {
+        fields[i].base.readOnly = true;
+        fields[i].base.setAttribute("aria-readonly", "true");
+    }
+
     function value(input) {
-        if (input.value.trim() === "") return null;
+        if (!input || input.value.trim() === "") return null;
         const n = Number(input.value);
         return Number.isFinite(n) ? n : null;
     }
 
+    // 新計算式
+    // 倍率 = (投資ダイヤ数 + ダイヤ数の差) ÷ 投資ダイヤ数
+    //       = (投資額 + (獲得後 - 元)) ÷ 投資額
     function cappedRate(difference, investment) {
-        return Math.min(difference / investment, MAX_RATE);
+        return Math.min((investment + difference) / investment, MAX_RATE);
     }
 
     function renderRate(element, rate) {
@@ -50,27 +59,44 @@ function init() {
         else element.classList.add("bad");
     }
 
+    function updateBaseReferences() {
+        for (let i = 1; i < fields.length; i++) {
+            const previousAfter = value(fields[i - 1].after);
+            fields[i].base.value = previousAfter === null ? "" : String(previousAfter);
+        }
+    }
+
     function calculate() {
+        // まず②～④の元ダイヤ数を前段の獲得後へ同期
+        updateBaseReferences();
+
         for (const field of fields) {
             const base = value(field.base);
             const after = value(field.after);
+
             if (base === null || after === null) {
                 field.diff.textContent = "-";
                 renderRate(field.rate, null);
                 continue;
             }
+
             const difference = after - base;
             field.diff.textContent = difference.toLocaleString("ja-JP");
             renderRate(field.rate, cappedRate(difference, INVESTMENTS[field.key]));
         }
 
+        // 総合倍率は①の元ダイヤ数から④の獲得後までの増加量を
+        // 総投資ダイヤ数33330に加えてから33330で割る
         const firstBase = value(fields[0].base);
         const fourthAfter = value(fields[3].after);
+
         if (firstBase === null || fourthAfter === null) {
             renderRate(totalRate, null);
         } else {
-            renderRate(totalRate, cappedRate(fourthAfter - firstBase, TOTAL_INVESTMENT));
+            const totalDifference = fourthAfter - firstBase;
+            renderRate(totalRate, cappedRate(totalDifference, TOTAL_INVESTMENT));
         }
+
         save();
     }
 
@@ -91,11 +117,14 @@ function init() {
             const raw = localStorage.getItem(STORAGE_KEY);
             if (!raw) return;
             const data = JSON.parse(raw);
-            fields.forEach(f => {
-                if (!data[f.key]) return;
-                f.base.value = data[f.key].base ?? "";
-                f.after.value = data[f.key].after ?? "";
-            });
+            if (data["30"]) {
+                fields[0].base.value = data["30"].base ?? "";
+                fields[0].after.value = data["30"].after ?? "";
+            }
+            // ②～④のbaseは保存値を使わず、前段afterから自動生成する
+            for (let i = 1; i < fields.length; i++) {
+                fields[i].after.value = data[fields[i].key]?.after ?? "";
+            }
         } catch (e) {
             console.warn("保存データを読み込めませんでした", e);
         }
@@ -103,13 +132,16 @@ function init() {
 
     function reset() {
         if (!window.confirm("入力内容をすべてリセットしますか？")) return;
+
         fields.forEach(f => {
             f.base.value = "";
             f.after.value = "";
             f.diff.textContent = "-";
             renderRate(f.rate, null);
         });
+
         renderRate(totalRate, null);
+
         try {
             localStorage.removeItem(STORAGE_KEY);
         } catch (e) {
@@ -118,11 +150,13 @@ function init() {
     }
 
     fields.forEach(f => {
-        f.base.addEventListener("input", calculate);
         f.after.addEventListener("input", calculate);
-        f.base.addEventListener("change", calculate);
         f.after.addEventListener("change", calculate);
     });
+
+    // ①の元ダイヤ数だけは手動入力
+    fields[0].base.addEventListener("input", calculate);
+    fields[0].base.addEventListener("change", calculate);
 
     resetButton.addEventListener("click", reset);
 
