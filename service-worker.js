@@ -1,6 +1,5 @@
-const CACHE_NAME = "diamond-counter-v1";
-
-const APP_FILES = [
+const CACHE_NAME = "diamond-counter-v3";
+const CACHE_FILES = [
     "./",
     "./index.html",
     "./style.css",
@@ -11,42 +10,29 @@ const APP_FILES = [
     "./icons/icon-512.png",
     "./icons/maskable-512.png"
 ];
-
-// ----------------------------------------
-// インストール
-// ----------------------------------------
-
+/* ========================================
+   Install
+======================================== */
 self.addEventListener("install", event => {
-
     event.waitUntil(
-
         caches.open(CACHE_NAME)
             .then(cache => {
-
-                return cache.addAll(APP_FILES);
-
+                return cache.addAll(CACHE_FILES);
             })
             .then(() => {
-
                 return self.skipWaiting();
-
             })
     );
 });
-
-// ----------------------------------------
-// アクティベート
-// ----------------------------------------
-
+/* ========================================
+   Activate
+   古いキャッシュを削除
+======================================== */
 self.addEventListener("activate", event => {
-
     event.waitUntil(
-
         caches.keys()
             .then(cacheNames => {
-
                 return Promise.all(
-
                     cacheNames
                         .filter(
                             name =>
@@ -57,93 +43,42 @@ self.addEventListener("activate", event => {
                                 caches.delete(name)
                         )
                 );
-
             })
             .then(() => {
-
                 return self.clients.claim();
-
             })
     );
 });
-
-// ----------------------------------------
-// キャッシュ戦略
-//
-// HTML / CSS / JS / Manifest等
-// → Cache First
-//
-// 外部リソース
-// → Network First
-// ----------------------------------------
-
+/* ========================================
+   Fetch
+======================================== */
 self.addEventListener("fetch", event => {
-
-    const request = event.request;
-
-    // GET以外は処理しない
-    if (request.method !== "GET") {
+    if (event.request.method !== "GET") {
         return;
     }
-
     event.respondWith(
-
-        caches.match(request)
-            .then(cachedResponse => {
-
-                if (cachedResponse) {
-
-                    return cachedResponse;
-                }
-
-                return fetch(request)
-                    .then(networkResponse => {
-
-                        // 正常なレスポンスのみ保存
-                        if (
-                            networkResponse &&
-                            networkResponse.status === 200 &&
-                            networkResponse.type === "basic"
-                        ) {
-
-                            const responseClone =
-                                networkResponse.clone();
-
-                            caches.open(CACHE_NAME)
-                                .then(cache => {
-
-                                    cache.put(
-                                        request,
-                                        responseClone
-                                    );
-
-                                });
-                        }
-
-                        return networkResponse;
-
-                    })
-                    .catch(() => {
-
-                        // オフライン時にトップページを返す
-                        if (
-                            request.mode === "navigate"
-                        ) {
-
-                            return caches.match(
-                                "./index.html"
+        fetch(event.request)
+            .then(response => {
+                if (
+                    response &&
+                    response.status === 200
+                ) {
+                    const copy =
+                        response.clone();
+                    caches.open(CACHE_NAME)
+                        .then(cache => {
+                            cache.put(
+                                event.request,
+                                copy
                             );
-                        }
-
-                        return new Response(
-                            "",
-                            {
-                                status: 503,
-                                statusText:
-                                    "Offline"
-                            }
-                        );
-                    });
-
+                        });
+                }
+                return response;
+            })
+            .catch(() => {
+                return caches.match(
+                    event.request
+                );
             })
     );
+});
