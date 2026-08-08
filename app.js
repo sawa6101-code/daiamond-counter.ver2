@@ -1,28 +1,19 @@
-// ========================================
-// ダイヤ倍率計算機
-// ========================================
-
-// 投資額
+"use strict";
+/* ========================================
+   ダイヤ倍率計算機
+   ======================================== */
 const INVESTMENTS = {
     30: 30,
     300: 300,
     3000: 3000,
     30000: 30000
 };
-
-// 総投資額
-const TOTAL_INVESTMENT = 30 + 300 + 3000 + 30000; // 33330
-
-// 倍率上限
+const TOTAL_INVESTMENT = 33330;
 const MAX_RATE = 2;
-
-// 保存キー
-const STORAGE_KEY = "diamondCounterData";
-
-// ----------------------------------------
-// DOM取得
-// ----------------------------------------
-
+const STORAGE_KEY = "diamondCounterData_v2";
+/* ----------------------------------------
+   DOM
+---------------------------------------- */
 const fields = [
     {
         key: "30",
@@ -53,66 +44,43 @@ const fields = [
         rate: document.getElementById("rate30000")
     }
 ];
-
-const totalRateElement = document.getElementById("totalRate");
-const resetButton = document.getElementById("resetButton");
-
-// ----------------------------------------
-// 数値取得
-// ----------------------------------------
-
-function getNumber(input) {
-    const value = Number(input.value);
-
-    return Number.isFinite(value) ? value : null;
-}
-
-// ----------------------------------------
-// 倍率計算
-// ----------------------------------------
-
-function calculateRate(difference, investment) {
-
-    if (!Number.isFinite(difference)) {
+const totalRateElement =
+    document.getElementById("totalRate");
+const resetButton =
+    document.getElementById("resetButton");
+/* ----------------------------------------
+   入力値
+---------------------------------------- */
+function getValue(input) {
+    if (!input || input.value.trim() === "") {
         return null;
     }
-
+    const value = Number(input.value);
+    return Number.isFinite(value) ? value : null;
+}
+/* ----------------------------------------
+   倍率
+---------------------------------------- */
+function calculateRate(difference, investment) {
     const rate = difference / investment;
-
-    // 最大2倍
     return Math.min(rate, MAX_RATE);
 }
-
-// ----------------------------------------
-// 倍率表示
-// ----------------------------------------
-
-function formatRate(rate) {
-
-    if (rate === null || !Number.isFinite(rate)) {
-        return "-";
-    }
-
-    return `${rate.toFixed(3)}倍`;
-}
-
-// ----------------------------------------
-// 倍率の色分け
-// ----------------------------------------
-
-function applyRateColor(element, rate) {
-
+/* ----------------------------------------
+   表示
+---------------------------------------- */
+function displayRate(element, rate) {
     element.classList.remove(
         "good",
         "warning",
         "bad",
         "max"
     );
-
     if (rate === null || !Number.isFinite(rate)) {
+        element.textContent = "-";
         return;
     }
-
+    element.textContent =
+        rate.toFixed(3) + "倍";
     if (rate >= MAX_RATE) {
         element.classList.add("max");
     } else if (rate >= 1.5) {
@@ -123,269 +91,195 @@ function applyRateColor(element, rate) {
         element.classList.add("bad");
     }
 }
-
-// ----------------------------------------
-// 各投資の計算
-// ----------------------------------------
-
+/* ----------------------------------------
+   各投資の計算
+---------------------------------------- */
 function calculate() {
-
     fields.forEach(field => {
-
-        const base = getNumber(field.base);
-        const after = getNumber(field.after);
-
-        // 両方入力されている場合のみ計算
-        if (base !== null && after !== null) {
-
-            // 増加ダイヤ数
-            const difference = after - base;
-
-            // 各投資額に対する倍率
-            const rate = calculateRate(
-                difference,
-                INVESTMENTS[field.key]
-            );
-
-            field.diff.textContent =
-                difference.toLocaleString("ja-JP");
-
-            field.rate.textContent =
-                formatRate(rate);
-
-            applyRateColor(field.rate, rate);
-
-        } else {
-
+        const base = getValue(field.base);
+        const after = getValue(field.after);
+        if (base === null || after === null) {
             field.diff.textContent = "-";
-            field.rate.textContent = "-";
-
-            applyRateColor(field.rate, null);
+            displayRate(field.rate, null);
+            return;
         }
+        // 獲得後 - 元
+        const difference = after - base;
+        // 増加ダイヤ数
+        field.diff.textContent =
+            difference.toLocaleString("ja-JP");
+        // 増加ダイヤ数 ÷ 投資額
+        const rate = calculateRate(
+            difference,
+            INVESTMENTS[field.key]
+        );
+        displayRate(field.rate, rate);
     });
-
-    calculateTotalRate();
+    calculateTotal();
     saveData();
 }
-
-// ----------------------------------------
-// 総合倍率
-// ----------------------------------------
-
-function calculateTotalRate() {
-
-    const first = fields[0];
-    const last = fields[3];
-
-    const firstBase = getNumber(first.base);
-    const lastAfter = getNumber(last.after);
-
-    if (firstBase === null || lastAfter === null) {
-
-        totalRateElement.textContent = "-";
-
-        applyRateColor(totalRateElement, null);
-
+/* ----------------------------------------
+   総合倍率
+---------------------------------------- */
+function calculateTotal() {
+    const firstBase =
+        getValue(fields[0].base);
+    const fourthAfter =
+        getValue(fields[3].after);
+    if (
+        firstBase === null ||
+        fourthAfter === null
+    ) {
+        displayRate(
+            totalRateElement,
+            null
+        );
         return;
     }
-
-    // ①元ダイヤ → ④獲得後
+    // ④獲得後 - ①元
     const totalDifference =
-        lastAfter - firstBase;
-
-    // 総投資額33330に対する倍率
+        fourthAfter - firstBase;
+    // 総投資額33330で割る
     const totalRate =
         calculateRate(
             totalDifference,
             TOTAL_INVESTMENT
         );
-
-    totalRateElement.textContent =
-        formatRate(totalRate);
-
-    applyRateColor(
+    displayRate(
         totalRateElement,
         totalRate
     );
 }
-
-// ----------------------------------------
-// データ保存
-// ----------------------------------------
-
+/* ----------------------------------------
+   保存
+---------------------------------------- */
 function saveData() {
-
     const data = {};
-
     fields.forEach(field => {
-
         data[field.key] = {
             base: field.base.value,
             after: field.after.value
         };
-
     });
-
     try {
-
         localStorage.setItem(
             STORAGE_KEY,
             JSON.stringify(data)
         );
-
     } catch (error) {
-
-        console.warn(
-            "データを保存できませんでした。",
+        console.error(
+            "保存エラー:",
             error
         );
     }
 }
-
-// ----------------------------------------
-// データ復元
-// ----------------------------------------
-
+/* ----------------------------------------
+   復元
+---------------------------------------- */
 function loadData() {
-
     try {
-
         const saved =
             localStorage.getItem(STORAGE_KEY);
-
         if (!saved) {
             return;
         }
-
-        const data = JSON.parse(saved);
-
+        const data =
+            JSON.parse(saved);
         fields.forEach(field => {
-
             if (!data[field.key]) {
                 return;
             }
-
             field.base.value =
-                data[field.key].base ?? "";
-
+                data[field.key].base || "";
             field.after.value =
-                data[field.key].after ?? "";
-
+                data[field.key].after || "";
         });
-
     } catch (error) {
-
-        console.warn(
-            "保存データを読み込めませんでした。",
+        console.error(
+            "復元エラー:",
             error
         );
     }
 }
-
-// ----------------------------------------
-// リセット
-// ----------------------------------------
-
+/* ----------------------------------------
+   リセット
+---------------------------------------- */
 function resetData() {
-
-    const confirmed =
-        window.confirm(
+    if (
+        !window.confirm(
             "入力内容をすべてリセットしますか？"
-        );
-
-    if (!confirmed) {
+        )
+    ) {
         return;
     }
-
     fields.forEach(field => {
-
         field.base.value = "";
         field.after.value = "";
-
         field.diff.textContent = "-";
-        field.rate.textContent = "-";
-
-        applyRateColor(field.rate, null);
+        displayRate(
+            field.rate,
+            null
+        );
     });
-
-    totalRateElement.textContent = "-";
-
-    applyRateColor(
+    displayRate(
         totalRateElement,
         null
     );
-
     try {
-
         localStorage.removeItem(
             STORAGE_KEY
         );
-
     } catch (error) {
-
-        console.warn(
-            "保存データを削除できませんでした。",
+        console.error(
+            "削除エラー:",
             error
         );
     }
 }
-
-// ----------------------------------------
-// 入力イベント
-// ----------------------------------------
-
+/* ----------------------------------------
+   イベント登録
+---------------------------------------- */
 fields.forEach(field => {
-
     field.base.addEventListener(
         "input",
         calculate
     );
-
     field.after.addEventListener(
         "input",
         calculate
     );
 });
-
 resetButton.addEventListener(
     "click",
     resetData
 );
-
-// ----------------------------------------
-// 初期化
-// ----------------------------------------
-
+/* ----------------------------------------
+   起動
+---------------------------------------- */
 loadData();
 calculate();
-
-// ----------------------------------------
-// Service Worker登録
-// ----------------------------------------
-
+/* ----------------------------------------
+   Service Worker
+---------------------------------------- */
 if ("serviceWorker" in navigator) {
-
     window.addEventListener(
         "load",
-        () => {
-
-            navigator.serviceWorker
-                .register("./service-worker.js")
-                .then(registration => {
-
-                    console.log(
-                        "Service Worker registered:",
-                        registration.scope
+        async () => {
+            try {
+                const registration =
+                    await navigator.serviceWorker.register(
+                        "./service-worker.js"
                     );
-
-                })
-                .catch(error => {
-
-                    console.error(
-                        "Service Worker registration failed:",
-                        error
-                    );
-
-                });
+                console.log(
+                    "PWA Service Worker:",
+                    registration.scope
+                );
+            } catch (error) {
+                console.error(
+                    "Service Worker登録エラー:",
+                    error
+                );
+            }
         }
     );
+}
