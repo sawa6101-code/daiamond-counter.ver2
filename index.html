@@ -1,29 +1,12 @@
 <!DOCTYPE html>
 <html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#0099ff">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <title>ダイヤ倍率計算機</title>
-    <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="style.css">
-    <link rel="apple-touch-icon" href="icons/icon-192.png">
-</head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#0099ff"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><title>ダイヤ倍率計算機</title><link rel="manifest" href="manifest.json"><link rel="stylesheet" href="style.css"><link rel="apple-touch-icon" href="icons/icon-192.png"></head>
 <body>
-<header>
-    <h1>💎 ダイヤ倍率計算機</h1>
-    <p>各投資ごとの倍率を自動計算</p>
-</header>
-<main id="container">
-    <section class="card"><h2>① 30投資</h2><label for="base30">元のダイヤ数</label><input id="base30" type="number" inputmode="numeric"><label for="after30">獲得後ダイヤ数</label><input id="after30" type="number" inputmode="numeric"><div class="result"><div>増加ダイヤ数</div><span id="diff30">-</span></div><div class="rate"><div>倍率</div><span id="rate30">-</span></div></section>
-    <section class="card"><h2>② 300投資</h2><label for="base300">元のダイヤ数</label><input id="base300" type="number" inputmode="numeric"><label for="after300">獲得後ダイヤ数</label><input id="after300" type="number" inputmode="numeric"><div class="result"><div>増加ダイヤ数</div><span id="diff300">-</span></div><div class="rate"><div>倍率</div><span id="rate300">-</span></div></section>
-    <section class="card"><h2>③ 3000投資</h2><label for="base3000">元のダイヤ数</label><input id="base3000" type="number" inputmode="numeric"><label for="after3000">獲得後ダイヤ数</label><input id="after3000" type="number" inputmode="numeric"><div class="result"><div>増加ダイヤ数</div><span id="diff3000">-</span></div><div class="rate"><div>倍率</div><span id="rate3000">-</span></div></section>
-    <section class="card"><h2>④ 30000投資</h2><label for="base30000">元のダイヤ数</label><input id="base30000" type="number" inputmode="numeric"><label for="after30000">獲得後ダイヤ数</label><input id="after30000" type="number" inputmode="numeric"><div class="result"><div>増加ダイヤ数</div><span id="diff30000">-</span></div><div class="rate"><div>倍率</div><span id="rate30000">-</span></div></section>
-    <section class="summary"><h2>総合倍率</h2><div class="summaryRate" id="totalRate">-</div><small>（④獲得後 − ①元）÷33330</small></section>
-</main>
-<footer><button id="resetButton" type="button">リセット</button></footer>
-<script src="app.js" defer></script>
-</body>
-</html>
+<div id="lockScreen" class="lock-screen"><section class="lock-card"><h1>🔒 ダイヤ倍率計算機</h1><p>閲覧するにはパスワードを入力してください。</p><form id="passwordForm"><input id="passwordInput" type="password" autocomplete="current-password" placeholder="パスワード" autofocus><button type="submit">ロック解除</button><p id="passwordError" class="password-error"></p></form><button id="adminButton" class="admin-link" type="button">⚙️ パスワード管理</button></section></div>
+<div id="adminScreen" class="lock-screen hidden"><section class="lock-card"><h1>⚙️ パスワード管理</h1><div id="changeAuth"><p>第1段階：パスワード変更用パスワードを入力してください。</p><input id="changeAuthPassword" type="password" autocomplete="off" placeholder="パスワード変更用パスワード"><button id="changeAuthButton" type="button">次へ</button><p id="changeAuthError" class="password-error"></p></div><div id="adminPanel" class="hidden"><p>第2段階：パスワード変更が許可されました。</p><p>現在の有効期限：<strong id="expiryStatus">—</strong></p><label>新しいログインパスワード<input id="newPassword" type="password" autocomplete="new-password" placeholder="4文字以上"></label><label>新しいパスワード（確認）<input id="newPasswordConfirm" type="password" autocomplete="new-password" placeholder="もう一度入力"></label><label>有効期間（日）<input id="passwordDays" type="number" min="0" value="30"><small>0にすると無期限</small></label><button id="changePasswordButton" type="button">パスワードを変更</button><p id="adminError" class="password-error"></p></div><button id="adminClose" class="secondary" type="button">閉じる</button></section></div>
+<div id="appContent" class="hidden"><header><div class="header-row"><div><h1>💎 ダイヤ倍率計算機</h1><p>各投資ごとの倍率を自動計算</p></div><div class="header-actions"><button id="adminAppButton" class="lock-button" type="button">⚙️ パスワード管理</button><button id="lockButton" class="lock-button second" type="button">🔒 ロック</button></div></div></header><main id="container">
+<section class="card"><h2>① 30投資</h2><label for="base30">元のダイヤ数</label><input id="base30" type="number" inputmode="numeric"><label for="after30">獲得後ダイヤ数</label><input id="after30" type="number" inputmode="numeric"><div class="result"><div>増加ダイヤ数</div><span id="diff30">-</span></div><div class="rate"><div>倍率</div><span id="rate30">-</span></div></section>
+<section class="card"><h2>② 300投資</h2><label for="base300">元のダイヤ数</label><input id="base300" type="number" inputmode="numeric"><label for="after300">獲得後ダイヤ数</label><input id="after300" type="number" inputmode="numeric"><div class="result"><div>増加ダイヤ数</div><span id="diff300">-</span></div><div class="rate"><div>倍率</div><span id="rate300">-</span></div></section>
+<section class="card"><h2>③ 3000投資</h2><label for="base3000">元のダイヤ数</label><input id="base3000" type="number" inputmode="numeric"><label for="after3000">獲得後ダイヤ数</label><input id="after3000" type="number" inputmode="numeric"><div class="result"><div>増加ダイヤ数</div><span id="diff3000">-</span></div><div class="rate"><div>倍率</div><span id="rate3000">-</span></div></section>
+<section class="card"><h2>④ 30000投資</h2><label for="base30000">元のダイヤ数</label><input id="base30000" type="number" inputmode="numeric"><label for="after30000">獲得後ダイヤ数</label><input id="after30000" type="number" inputmode="numeric"><div class="result"><div>増加ダイヤ数</div><span id="diff30000">-</span></div><div class="rate"><div>倍率</div><span id="rate30000">-</span></div></section>
+<section class="summary"><h2>総合倍率</h2><div class="summaryRate" id="totalRate">-</div><small>（④獲得後 − ①元）を総投資33330で評価</small></section></main><footer><button id="resetButton" type="button">リセット</button></footer></div><script src="app.js" defer></script></body></html>
